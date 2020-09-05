@@ -8,8 +8,7 @@ import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import com.example.mynotes.R
 import com.example.mynotes.databinding.FragmentStartBinding
-import com.example.mynotes.utilits.APP_ACTIVITY
-import com.example.mynotes.utilits.TYPE_ROOM
+import com.example.mynotes.utilits.*
 import kotlinx.android.synthetic.main.fragment_start.*
 
 
@@ -30,14 +29,46 @@ class StartFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        initialization()
+
+        mViewModel = ViewModelProvider(this).get(StartFragmentViewModel::class.java)
+
+        if (AppPreference.getInitUser()){
+            mViewModel.InitDatabase(AppPreference.getTypeDB()){
+                APP_ACTIVITY.navController.navigate(R.id.action_startFragment_to_mainFragment)
+            }
+        } else {
+            initialization()
+        }
     }
 
     private fun initialization() {
-        mViewModel = ViewModelProvider(this).get(StartFragmentViewModel::class.java)
-        btn_room.setOnClickListener {
+
+        mBinding.btnRoom.setOnClickListener {
             mViewModel.InitDatabase(TYPE_ROOM){
+                AppPreference.setInitUser(true)
+                AppPreference.setTypeDB(TYPE_ROOM)
                 APP_ACTIVITY.navController.navigate(R.id.action_startFragment_to_mainFragment)
+            }
+        }
+        mBinding.btnFirebase.setOnClickListener {
+            mBinding.inputEmail.visibility = View.VISIBLE
+            mBinding.inputPassword.visibility = View.VISIBLE
+            mBinding.btnLogin.visibility = View.VISIBLE
+            mBinding.btnLogin.setOnClickListener {
+                val inputEmail = mBinding.inputEmail.text.toString()
+                val inputPassword = mBinding.inputPassword.text.toString()
+                if (inputEmail.isNotEmpty() && inputPassword.isNotEmpty()) {
+                    EMAIL = inputEmail
+                    PASSWORD = inputPassword
+                    mViewModel.InitDatabase(TYPE_FIREBASE){
+
+                        AppPreference.setInitUser(true)
+                        AppPreference.setTypeDB(TYPE_FIREBASE)
+                        APP_ACTIVITY.navController.navigate(R.id.action_startFragment_to_mainFragment)
+                    }
+                } else {
+                    showToast(getString(R.string.toast_wrong_enter))
+                }
             }
         }
     }
